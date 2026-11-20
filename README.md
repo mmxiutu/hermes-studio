@@ -85,11 +85,7 @@ npm run build          # 只生成 dist/，不是可拷贝的 tar 安装包
 
 它**不是**拷到另一台机器的完整安装包：没有 `bin/`、没有生产 `node_modules`，而且下一轮 `build` 会把 `dist/` 里的东西删掉重来。所以 **不要把 `hermes-web-ui-*.tar.gz` 放到 `dist/` 里**，会被下次编译冲掉。
 
-CI 和推荐的本地归档位置是仓库内的 **`release/webui/`**（和 `.github/workflows/webui-release.yml` 一致）。上一轮为了不 `prune` 你的开发目录，把 tar 写到了系统临时目录，所以不在项目根下，容易找不到：
-
-`C:\Users\Administrator\AppData\Local\Temp\ekko-studio-task-artifacts\2b52d607d11102c4\webui-package-JSlkl3\hermes-web-ui-0.8.29.tar.gz`
-
-以后本地打包应把这三个文件放到 `release/webui/`，方便直接拷走。
+产物写到仓库内的 **`release/webui/`**（和 `.github/workflows/webui-release.yml` 一致）。不要把 `hermes-web-ui-*.tar.gz` 放进 `dist/`。
 
 ## 打包
 
@@ -99,52 +95,89 @@ CI 和推荐的本地归档位置是仓库内的 **`release/webui/`**（和 `.gi
 - 编译 `node-pty` 等原生模块
 - 生成可以拷到另一台机器的 `tar.gz`
 
-另一台机器上没有源码、没有 Vite、也没有开发依赖。要能 `node bin/hermes-web-ui.mjs start`，必须带上 **CLI、`dist`、生产 `node_modules`**。所以完整打包是「安装 → 编原生模块 → 编译 → 丢掉开发依赖 → 冒烟 → 打 tar」，对应 [`.github/workflows/webui-release.yml`](.github/workflows/webui-release.yml)。
+另一台机器上没有源码、没有 Vite、也没有开发依赖。要能 `node bin/hermes-web-ui.mjs start`，必须带上 **CLI、`dist`、生产 `node_modules`**。完整流程对应 [`.github/workflows/webui-release.yml`](.github/workflows/webui-release.yml)。
+
+### 本地手动打包（可直接复制）
+
+在仓库根目录执行。`npm prune --omit=dev` 会删掉本仓库的开发依赖；打完包后若还要 `npm run dev`，再跑一次 `npm ci`。
+
+**Windows（PowerShell）：**
+
+```powershell
+npm ci --ignore-scripts
+npm rebuild node-pty
+npm run build
+npm prune --omit=dev --no-audit --no-fund
+npm run verify:sharp-runtime
+
+$version = node -p "require('./package.json').version"
+$stage = Join-Path $env:TEMP "hermes-web-ui-package\webui"
+Remove-Item -Recurse -Force (Split-Path $stage) -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path $stage, "release\webui" | Out-Null
+Copy-Item package.json, package-lock.json $stage
+Copy-Item -Recurse bin, dist, node_modules $stage
+if (Test-Path README.md) { Copy-Item README.md $stage }
+if (Test-Path LICENSE) { Copy-Item LICENSE $stage }
+
+$asset = "hermes-web-ui-$version.tar.gz"
+tar -czf "release/webui/$asset" -C (Split-Path $stage) webui
+Get-FileHash "release\webui\$asset" -Algorithm SHA256 |
+  ForEach-Object { "$($_.Hash.ToLower())  $asset" } |
+  Set-Content -Encoding ascii "release\webui\$asset.sha256"
+
+Write-Host "packed: $(Resolve-Path release\webui\$asset)"
+```
+
+**Linux / macOS：**
+
+```bash
+npm ci --ignore-scripts
+npm rebuild node-pty
+npm run build
+npm prune --omit=dev --no-audit --no-fund
+npm run verify:sharp-runtime
+
+version="$(node -p "require('./package.json').version")"
+asset="hermes-web-ui-${version}.tar.gz"
+mkdir -p release/webui /tmp/hermes-web-ui-package/webui
+cp package.json package-lock.json /tmp/hermes-web-ui-package/webui/
+cp -R bin dist node_modules /tmp/hermes-web-ui-package/webui/
+[ -f README.md ] && cp README.md /tmp/hermes-web-ui-package/webui/
+[ -f LICENSE ] && cp LICENSE /tmp/hermes-web-ui-package/webui/
+tar -czf "release/webui/${asset}" -C /tmp/hermes-web-ui-package webui
+shasum -a 256 "release/webui/${asset}" | awk '{print $1 "  " $2}' > "release/webui/${asset}.sha256"
+echo "packed: release/webui/${asset}"
+```
+
+打完后的文件：
+
+| 文件 | 说明 |
+| --- | --- |
+| `release/webui/hermes-web-ui-<version>.tar.gz` | 解压后是 `webui/` |
+| `release/webui/hermes-web-ui-<version>.tar.gz.sha256` | SHA-256 |
+
+恢复本仓库开发环境：
+
+```bash
+npm ci
+```
 
 ### 每条命令做什么
 
 | 步骤 | 命令 | 作用 |
 | --- | --- | --- |
-| 1. 按 lock 安装 | `npm ci --ignore-scripts` | 干净安装，且先**不跑**依赖的 install 脚本（避免在未编译前乱 rebuild） |
-| 2. 原生模块 | `npm rebuild node-pty` | 终端 PTY 是 C++ 插件，必须按**当前机器的 OS/CPU** 编一次 |
-| 3. 编译 | `npm run build` | 生成 `dist/`（内部还会生成 OpenAPI、`vue-tsc`、Vite、`tsc`、esbuild 打 server） |
-| 4. 裁依赖 | `npm prune --omit=dev --no-audit --no-fund` | 删掉 vitest/vite 等开发包，拷走的 `node_modules` 才小、才是运行时需要的 |
-| 5. 冒烟 | `npm run verify:sharp-runtime` | `sharp` 也是原生库，确认 prune 之后还能处理图片 |
-| 6. 归档 | 把文件拷进 `webui/` 再 `tar.gz` | 真正给「另一台机器」用的安装包 |
+| 1. 按 lock 安装 | `npm ci --ignore-scripts` | 干净安装，且先**不跑**依赖的 install 脚本 |
+| 2. 原生模块 | `npm rebuild node-pty` | 终端 PTY 按**当前机器的 OS/CPU** 编一次 |
+| 3. 编译 | `npm run build` | 生成 `dist/` |
+| 4. 裁依赖 | `npm prune --omit=dev --no-audit --no-fund` | 删掉 vitest/vite 等开发包 |
+| 5. 冒烟 | `npm run verify:sharp-runtime` | 确认 prune 之后 `sharp` 还能处理图片 |
+| 6. 归档 | 拷进 `webui/` 再 `tar.gz` | 给另一台机器用的安装包 |
 
-打进 tar 的内容：
+打进 tar 的内容：`package.json`、`package-lock.json`、`bin/`、`dist/`、`node_modules/`（第 4 步之后）。可选 `README.md`、`LICENSE`。
 
-- `package.json`、`package-lock.json`
-- `bin/`（`hermes-web-ui` 入口）
-- `dist/`
-- `node_modules/`（第 4 步之后）
+只拷 `dist/` **不够**。`sharp`、`node-pty`、`socket.io` 没有打进 `dist/server/index.js`，运行必须靠旁边的 `node_modules`。
 
-可选再放 `README.md`、`LICENSE`，方便目标机器对照说明。
-
-只拷 `dist/` **不够**。`sharp`、`node-pty`、`socket.io` 没有打进 `dist/server/index.js`（esbuild `external`），运行必须靠旁边的 `node_modules`。
-
-**注意：** `node-pty` / `sharp` 是按打包那台机器的系统编的。若目标机器 OS 或架构不同（例如 Windows 打、Linux 跑），解压后要在目标机再执行 `npm rebuild node-pty`，并确认 `sharp` 可用。
-
-### 这次本地打包实际做了什么
-
-仓库里当时已经有 `node_modules` 和 `dist/`，所以**没有再跑** `npm ci` 和 `npm run build`，避免重装、也避免在源码目录执行 `npm prune` 把开发依赖删掉。
-
-额外步骤（相对上面的标准流水线）：
-
-1. 在仓库**外面**建暂存目录 `webui/`（不污染当前开发环境）。
-2. 复制 `package.json`、`package-lock.json`、`README.md`、`LICENSE`、`bin/`、`dist/`，以及整份 `node_modules`。
-3. **只在暂存目录**执行 `npm prune --omit=dev` 和 `npm rebuild node-pty`，并用 `import sharp` 做了一次冒烟。
-4. 打成 `hermes-web-ui-0.8.29.tar.gz`，并写 `.sha256` 和 JSON manifest。
-
-产物路径（不在 git 仓库内）：
-
-`C:\Users\Administrator\AppData\Local\Temp\ekko-studio-task-artifacts\2b52d607d11102c4\webui-package-JSlkl3\`
-
-| 文件 | 说明 |
-| --- | --- |
-| `hermes-web-ui-0.8.29.tar.gz` | 约 195 MB，解压后是 `webui/` |
-| `hermes-web-ui-0.8.29.tar.gz.sha256` | SHA-256 |
-| `hermes-web-ui-0.8.29.json` | 版本与校验信息 |
+**注意：** `node-pty` / `sharp` 是按打包那台机器的系统编的。Windows 打的包拷到 Linux（或反过来）时，解压后要在目标机再执行 `npm rebuild node-pty`，并确认 `sharp` 可用。
 
 也可 `npm run pack:npm` 打 npm tarball；Docker 见根目录 `Dockerfile` / `docker-compose.yml`。那是另一套分发，不是这份 `webui/` tar。
 
