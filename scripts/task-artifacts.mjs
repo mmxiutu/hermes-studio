@@ -13,8 +13,7 @@ const protectedSegments = new Set(['.git', 'node_modules', '.pio', '__pycache__'
 const protectedTrees = [
   'dist', 'dist-ssr', 'logs', 'hermes_data', '.hermes', '.hermes-web-ui', '.ekko',
   '.claude', '.codex', 'packages/server/data', 'packages/ekko-agent/.ekko',
-  'packages/desktop/resources', 'packages/desktop/release',
-  'packages/desktop/release-update-test', 'release/npm', 'release/tos',
+  'release/npm', 'release/tos',
   'docs/screenshots',
 ]
 // This existing tracked design/history document is not a task delivery report.

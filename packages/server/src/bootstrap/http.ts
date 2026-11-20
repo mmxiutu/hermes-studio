@@ -1,6 +1,5 @@
 import { restoreStudioModelTarget } from '../modules/studio/public/model-target-store'
 import { gatewayToken } from '../modules/studio/public/model-gateway-adapters'
-import { registerDesktopBrowserRelay } from '../modules/studio/sockets/desktop-browser'
 import { registerPluginSessions } from '../modules/studio/sockets/plugin-sessions'
 import { getPluginManager, startPluginHost, stopPluginHost } from '../modules/studio/services/plugins/host'
 import { createPluginHttpMiddleware } from '../modules/studio/services/plugins/http'
@@ -619,7 +618,6 @@ export async function bootstrap() {
   const personPresenceServer = new PersonPresenceSocketServer(activeGroupChatServer.getIO())
   personPresenceServer.init()
   additionalShutdownSteps.push({ name: 'Person presence', close: () => personPresenceServer.close() })
-  registerDesktopBrowserRelay(activeGroupChatServer.getIO())
   registerPluginSessions(activeGroupChatServer.getIO())
 
   startGlobalAgentServer(activeGroupChatServer.getIO(), { localBaseUrl: loopbackBaseUrl })

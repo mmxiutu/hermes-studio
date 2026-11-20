@@ -81,12 +81,7 @@ import { useChatSurfaceReveal } from "@/composables/useChatSurfaceReveal";
 import ModelCascader from "@/components/hermes/models/ModelCascader.vue";
 import { configuredProviderApiMode, canScopedCodingAgentUseProvider, usesServerManagedProviderAuth, hasConfiguredProviderApiKey } from "@/utils/codingAgentProviders";
 import { OPEN_SUBAGENT_STREAM_EVENT, type OpenSubagentStreamDetail } from "@/utils/hermes/subagent-stream";
-import { desktopBridge, hasDesktopBrowserBridge } from "@/utils/desktop-bridge";
-import { OPEN_DESKTOP_BROWSER_PANEL_EVENT } from "@/utils/desktop-browser";
-import {
-  createBrowserAnnotationAttachment,
-  type BrowserAnnotationSubmission,
-} from "@/utils/browser-annotation-submit";
+import { desktopBridge } from "@/utils/desktop-bridge";
 
 const props = withDefaults(defineProps<{
   standalone?: boolean;
@@ -157,8 +152,7 @@ const isChatDropActive = ref(false);
 const showToolPanel = ref(false);
 const previewOnlyFileOpen = ref(false);
 const toolPanelTransitionReady = ref(false);
-const activeToolPanel = ref<"files" | "terminal" | "browser">("files");
-const desktopBrowserAvailable = hasDesktopBrowserBridge();
+const activeToolPanel = ref<"files" | "terminal">("files");
 const desktopChatWindowAvailable = desktopBridge()?.isDesktop === true
   && typeof desktopBridge()?.openChatWindow === "function";
 const selectedSubagent = ref<OpenSubagentStreamDetail | null>(null);
@@ -367,12 +361,6 @@ function handleWorkspaceFileAttach(file: File) {
   chatInputRef.value?.addFiles?.([file]);
 }
 
-async function submitBrowserAnnotations(payload: BrowserAnnotationSubmission): Promise<boolean> {
-  const attachment = createBrowserAnnotationAttachment(payload);
-  await chatStore.sendMessage("", [attachment]);
-  return true;
-}
-
 async function handleSessionClick(
   sessionId: string,
   options: { preserveCategoryCollapse?: boolean } = {},
@@ -491,30 +479,12 @@ function handleOpenSubagentStreamRequest(event: Event) {
   showToolPanel.value = true;
 }
 
-function handleOpenDesktopBrowserPanelRequest() {
-  if (!desktopBrowserAvailable) return;
-  if (toolPanelStore.workspaceDiff && filesStore.hasUnsavedChanges) {
-    message.warning(t("files.unsavedChanges"));
-    return;
-  }
-  if (toolPanelStore.workspaceDiff && filesStore.editingFile) filesStore.closeEditor();
-  workspacePreviewRequestSeq += 1;
-  workspacePreviewRequestPending = false;
-  filesStore.closePreview();
-  toolPanelStore.closeWorkspaceDiff();
-  previewOnlyFileOpen.value = false;
-  selectedSubagent.value = null;
-  activeToolPanel.value = "browser";
-  showToolPanel.value = true;
-}
-
 onMounted(() => {
   void fetchAgentAvailabilitySnapshot().catch(() => {});
 
 
 
   window.addEventListener("hermes:preview-workspace-file", handleWorkspaceFilePreviewRequest);
-  window.addEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, handleOpenDesktopBrowserPanelRequest);
   window.addEventListener(OPEN_SUBAGENT_STREAM_EVENT, handleOpenSubagentStreamRequest);
   window.addEventListener("resize", handleToolPanelViewportResize);
   window.addEventListener("keydown", handleNewChatEscape);
@@ -554,7 +524,6 @@ onUnmounted(() => {
   newChatOptionsLoadSequence++;
 
   window.removeEventListener("hermes:preview-workspace-file", handleWorkspaceFilePreviewRequest);
-  window.removeEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, handleOpenDesktopBrowserPanelRequest);
   window.removeEventListener(OPEN_SUBAGENT_STREAM_EVENT, handleOpenSubagentStreamRequest);
   window.removeEventListener("resize", handleToolPanelViewportResize);
   window.removeEventListener("keydown", handleNewChatEscape);
@@ -3004,7 +2973,7 @@ watch([isEmptySingleChat, () => route.fullPath], ([empty]) => {
           <!-- chat/live mode toggle hidden -->
           <template v-if="currentMode === 'chat' && !showNewChatPage">
             <HeaderToolPanelToggle v-if="isSuperAdmin" :expanded="showToolPanel" controls="chat-tool-panel"
-              :tooltip="desktopBrowserAvailable ? `${t('drawer.files')} / ${t('drawer.terminal')} / ${t('browser.title')}` : `${t('drawer.files')} / ${t('drawer.terminal')}`"
+              :tooltip="`${t('drawer.files')} / ${t('drawer.terminal')}`"
               @toggle="toggleToolPanel" />
             <NDropdown
               v-model:show="showActiveSessionMenu"
@@ -3216,8 +3185,7 @@ watch([isEmptySingleChat, () => route.fullPath], ([empty]) => {
                 <template v-else>
                   <ChatToolsPanel v-model:active-panel="activeToolPanel"
                     :workspace-session-id="activeWorkspaceSessionId" :workspace="activeWorkspacePath"
-                    :visible="showToolPanel" :browser-visible="toolPanelTransitionReady" :browser-available="desktopBrowserAvailable"
-                    :submit="submitBrowserAnnotations" @attach="handleWorkspaceFileAttach" />
+                    :visible="showToolPanel" @attach="handleWorkspaceFileAttach" />
                 </template>
               </div>
             </aside>

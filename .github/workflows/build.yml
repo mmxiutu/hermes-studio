@@ -4,23 +4,20 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-      - base
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      PLUGIN_DOCS_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+      PLUGIN_DOCS_BASE: ${{ github.event.before }}
 
     steps:
       - name: Checkout repository

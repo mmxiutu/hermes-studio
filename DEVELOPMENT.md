@@ -75,17 +75,16 @@ registry, local SDK, reload behavior and troubleshooting.
   Playwright coverage for new browser journeys.
 - Use local fixtures and mocked external APIs/sockets. Avoid global setup,
   source-string assertions and repeated platform/theme/viewport matrices.
-- Run `npm run harness:check` and `npm run build` before opening a PR, plus the
+- Run `npm run harness:check` and `npm run build` after a change, plus the
   specific tests added for new functionality.
 - `npm test`, `npm run test:coverage` and `npm run test:e2e` allow an empty suite
   during the reset while continuing to fail on assertions in any tests that are
   present. An empty suite does not exempt new features from adding tests.
-- Independent Test and E2E workflows run `npm test` and `npm run test:e2e`
-  automatically on pushes to `main` and pull requests targeting `main` or `base`;
-  both also support manual dispatch. Build reports harness and production-build
-  results separately. E2E uses four Chromium shards with one worker each and a
-  combined `E2E` result and HTML report. Lockfile checks remain separate. Blanket
-  coverage and platform test matrices remain removed. See `tests/README.md`.
+- Optional GitHub Actions on `push` to `main` (and manual dispatch) run Test and
+  E2E. Build reports harness and production-build results separately. E2E uses
+  four Chromium shards with one worker each and a combined `E2E` result and HTML
+  report. Lockfile checks remain separate. Blanket coverage and platform test
+  matrices remain removed. See `tests/README.md`.
 
 ## npm Publishing
 

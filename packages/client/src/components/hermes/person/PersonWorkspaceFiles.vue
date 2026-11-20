@@ -7,9 +7,6 @@ import { isPreviewableFile } from '@/utils/hermes/file-preview'
 import { useTaskDrawerLayout } from '@/components/hermes/tasks/useTaskDrawerLayout'
 import HeaderToolPanelToggle from '@/components/layout/HeaderToolPanelToggle.vue'
 import ChatToolsPanel from '@/components/hermes/chat/ChatToolsPanel.vue'
-import { hasDesktopBrowserBridge } from '@/utils/desktop-bridge'
-import { OPEN_DESKTOP_BROWSER_PANEL_EVENT } from '@/utils/desktop-browser'
-import { createBrowserAnnotationAttachment, type BrowserAnnotationSubmission } from '@/utils/browser-annotation-submit'
 import type { Attachment } from '@/stores/hermes/chat'
 
 const FilePreview = defineAsyncComponent(() => import('@/components/hermes/files/FilePreview.vue'))
@@ -69,9 +66,8 @@ function startResize(event: PointerEvent) {
 }
 const panelId = `person-files-panel-${useId()}`
 const panelReady = ref(false)
-const activePanel = ref<'files' | 'terminal' | 'browser'>('files')
-const browserAvailable = hasDesktopBrowserBridge()
-const tooltip = computed(() => [t('drawer.files'), t('drawer.terminal'), ...(browserAvailable ? [t('browser.title')] : [])].join(' / '))
+const activePanel = ref<'files' | 'terminal'>('files')
+const tooltip = computed(() => [t('drawer.files'), t('drawer.terminal')].join(' / '))
 const previewOnly = ref(false)
 const loading = ref(false)
 let requestSequence = 0
@@ -120,15 +116,6 @@ function openPanel(panel = activePanel.value) {
   previewOnly.value = false
   show.value = true
   panelReady.value = alreadyOpen
-}
-
-function openBrowser() {
-  if (browserAvailable) openPanel('browser')
-}
-
-async function submitBrowserAnnotations(submission: BrowserAnnotationSubmission) {
-  if (!props.active || !props.sessionId) return false
-  return props.submit('', [createBrowserAnnotationAttachment(submission)])
 }
 
 function handlePreview(event: Event) {
@@ -195,14 +182,12 @@ onMounted(() => {
   window.addEventListener('resize', measure)
   window.addEventListener('keydown', handleEscape)
   window.addEventListener('hermes:preview-workspace-file', handlePreview)
-  window.addEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, openBrowser)
 })
 onBeforeUnmount(() => {
   observer?.disconnect()
   window.removeEventListener('resize', measure)
   window.removeEventListener('keydown', handleEscape)
   window.removeEventListener('hermes:preview-workspace-file', handlePreview)
-  window.removeEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, openBrowser)
   reset()
 })
 </script>
@@ -223,8 +208,7 @@ onBeforeUnmount(() => {
         </template>
         <ChatToolsPanel v-else v-model:active-panel="activePanel" :workspace-session-id="sessionId" :workspace="workspace"
           :context-ready="active && !!sessionId"
-          :visible="show" :browser-visible="panelReady" :browser-available="browserAvailable"
-          :submit="submitBrowserAnnotations" @attach="file => emit('attach', file)" />
+          :visible="show" @attach="file => emit('attach', file)" />
       </template>
     </aside>
     </Transition>

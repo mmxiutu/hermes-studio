@@ -689,10 +689,7 @@ async function browserSession(descriptor, signal) {
 async function browserRequest(method, params = {}, signal) {
   let descriptor
   try { descriptor = browserDescriptor() } catch {
-    return request('/api/studio/desktop-browser/request', {
-      method: 'POST', body: { method, params, client_id: BROWSER_CLIENT_ID }, signal,
-      ...(browserCallContext.getStore() || {}),
-    })
+    throw new Error('Desktop Browser is not available in Hermes Web UI')
   }
   const session = await browserSession(descriptor, signal)
   signal?.throwIfAborted()

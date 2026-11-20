@@ -21,7 +21,7 @@ if (start < 0 || end < 0 || end < start) {
 const generated = `${beginMarker}\n\n${inventory}\n\n${endMarker}`
 const current = document.slice(start, end + endMarker.length)
 
-if (current === generated) {
+if (current.replace(/\r\n/g, '\n') === generated.replace(/\r\n/g, '\n')) {
   process.stdout.write('Ekko public API documentation is current.\n')
   process.exit(0)
 }

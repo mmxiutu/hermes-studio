@@ -84,33 +84,6 @@
     "packages/client/src/components/hermes/chat/ConversationMonitorPane.vue": {
       "unowned-background | .conversation-monitor__message | background: rgba($bg-secondary, 0.8)": 1
     },
-    "packages/client/src/components/hermes/chat/DesktopBrowserPanel.vue": {
-      "literal-color | .tab-strip | background: rgba(127,127,127,.06)": 1,
-      "unowned-background | .tab-strip | background: rgba(127,127,127,.06)": 1,
-      "literal-color | .tab i | color: #3b82f6": 1,
-      "literal-color | .toolbar > button:hover, .download-trigger:hover, .new-tab:hover | background: rgba(127,127,127,.15)": 1,
-      "literal-color | .download-trigger > b | background: #ef4444": 1,
-      "unowned-background | .download-trigger > b | background: #ef4444": 1,
-      "literal-color | .download-trigger > b | color: #fff": 1,
-      "literal-color | .agent-banner | background: rgba(59,130,246,.12)": 1,
-      "unowned-background | .agent-banner | background: rgba(59,130,246,.12)": 1,
-      "literal-color | .agent-banner | color: #3b82f6": 1,
-      "literal-color | .crash-banner | background: rgba(239,68,68,.12)": 1,
-      "unowned-background | .crash-banner | background: rgba(239,68,68,.12)": 1,
-      "literal-color | .crash-banner | color: #dc2626": 1,
-      "literal-color | .annotation-session-bar | color: #2563eb": 1,
-      "literal-color | .annotation-session-bar | background: rgba(59,130,246,.1)": 1,
-      "unowned-background | .annotation-session-bar | background: rgba(59,130,246,.1)": 1,
-      "literal-color | .annotation-item | background: rgba(59,130,246,.1)": 1,
-      "unowned-background | .annotation-item | background: rgba(59,130,246,.1)": 1,
-      "literal-color | .annotation-item > button:hover | background: rgba(59,130,246,.15)": 1,
-      "unowned-background | .annotation-editor | background: var(--card-color, #fff)": 1,
-      "literal-color | .annotation-preview > img | background: #fff": 1,
-      "unowned-background | .annotation-preview > img | background: #fff": 1,
-      "literal-color | .annotation-popover | box-shadow: 0 8px 28px rgba(15,23,42,.22)": 1,
-      "local-naive-fill | .annotation-popover :deep(.annotation-note-input.n-input) | --n-color: var(--theme-overlay-bg, var(--bg-card))": 1,
-      "local-naive-fill | .annotation-popover :deep(.annotation-note-input.n-input) | --n-color-focus: var(--theme-overlay-bg, var(--bg-card))": 1
-    },
     "packages/client/src/components/hermes/chat/DrawerPanel.vue": {
       "literal-color | .drawer-overlay | background: rgba(0, 0, 0, 0.5)": 1,
       "unowned-background | .drawer-overlay | background: rgba(0, 0, 0, 0.5)": 1,

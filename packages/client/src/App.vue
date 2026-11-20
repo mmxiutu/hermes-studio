@@ -4,7 +4,6 @@ import { usePluginCatalog, pluginPages } from "@/composables/usePluginCatalog";
 import PluginNotifications from '@/components/plugins/PluginNotifications.vue'
 import NavigationSettingsModal from '@/components/layout/NavigationSettingsModal.vue'
 import { useNavigationStore } from '@/stores/navigation'
-import { ensureRemoteBrowserRelay, stopRemoteBrowserRelay } from '@/composables/useRemoteBrowserRelay'
 import { deploymentUrl } from '@/utils/deployment-url'
 import {
   computed,
@@ -114,7 +113,6 @@ const naiveRtl = computed(() => naiveRtlFor(locale.value));
 const appStore = useAppStore();
 const navigation = useNavigationStore();
 const profilesStore = useProfilesStore();
-watch(() => profilesStore.activeProfileName, async () => { await stopRemoteBrowserRelay(); await ensureRemoteBrowserRelay() });
 const route = useRoute();
 const isPluginPage = computed(() => ['studio.pluginPage', 'studio.pluginSettings', 'studio.pluginAgentSettings'].includes(String(route.name)));
 const { snapshot: pluginSnapshot, profile: pluginProfile } = usePluginCatalog(computed(() => ['studio.pluginPage', 'studio.pluginAgentSettings'].includes(String(route.name))));
@@ -134,7 +132,6 @@ const themeOverrides = computed(() =>
 const naiveTheme = computed(() => (isDark.value ? darkTheme : null));
 
 const isLoginPage = computed(() => route.name === "login");
-watch(isLoginPage, login => { void (login ? stopRemoteBrowserRelay() : ensureRemoteBrowserRelay()) }, { immediate: true });
 watchServerTtsSettingsHydration({
   isLoginPage: () => isLoginPage.value,
   activeProfileName: () => profilesStore.activeProfileName,

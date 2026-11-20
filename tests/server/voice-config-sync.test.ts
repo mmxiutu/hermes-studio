@@ -26,9 +26,6 @@ vi.mock('../../packages/server/src/modules/studio/services/voice/stt/local-model
 // Settings controllers use the real repositories and sync service; speech/run
 // boundaries are unused here and must not load audio models or application state.
 vi.mock('../../packages/server/src/modules/studio/services/session-shares/access', () => ({}))
-vi.mock('../../packages/server/src/modules/studio/public/mcu-voice', () => ({}))
-vi.mock('../../packages/server/src/modules/studio/services/global-agent/mcu-agent-runtime', () => ({}))
-vi.mock('../../packages/server/src/modules/studio/services/voice/mcu/prompts', () => ({}))
 vi.mock('../../packages/server/src/modules/studio/services/voice/stt', () => ({}))
 vi.mock('../../packages/server/src/modules/studio/services/voice/stt/audio-convert', () => ({}))
 vi.mock('../../packages/server/src/modules/studio/services/voice/tts/core', () => ({}))

@@ -4,7 +4,7 @@ This document is the architecture contract for `packages/server/src`. It
 separates Studio-owned capabilities from the agent families while
 preserving request/response semantics and persisted data. Studio-owned HTTP
 operations use `/api/studio/*`; Hermes-owned operations use `/api/hermes/*`.
-Old server source trees are not retained. Released App and MCU URL aliases are
+Old server source trees are not retained. Released App URL aliases are
 centralized in `modules/studio/middleware/legacy-app-api.ts`. Previously generated
 Coding Agent proxy URLs are handled by `modules/studio/middleware/model-gateway.ts`;
 they do not have separate route or controller modules.
@@ -90,7 +90,7 @@ packages/server/src/
       middleware/
         auth.ts
         errors.ts
-        legacy-app-api.ts          # temporary released App and MCU firmware URL mapping only
+        legacy-app-api.ts          # temporary released App URL mapping only
         request-context.ts
       http/
         body.ts
@@ -100,7 +100,6 @@ packages/server/src/
         auth.ts
         update.ts
         health.ts
-        mcu-devices.ts
         upload.ts                   # /api/studio/uploads
         app-upload.ts               # /api/studio/app-uploads/*
         files.ts                    # /api/studio/files/*
@@ -123,7 +122,6 @@ packages/server/src/
         auth.ts
         update.ts
         health.ts
-        mcu-devices.ts
         upload.ts
         app-upload.ts
         files.ts
@@ -420,7 +418,7 @@ Preserve behavior while moving ownership:
    repository/adapter, socket, Client API, and focused tests.
 5. Do not add compatibility re-exports or legacy source trees. Old HTTP aliases
    are allowed only in `modules/studio/middleware/legacy-app-api.ts` for released
-   App and MCU firmware versions; current clients must migrate to canonical URLs in the same change.
+   App versions; current clients must migrate to canonical URLs in the same change.
 
 ## Mechanical Harness
 

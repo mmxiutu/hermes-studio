@@ -1,21 +1,16 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { BrowserAnnotationSubmission } from '@/utils/browser-annotation-submit'
 
 const FilesPanel = defineAsyncComponent(() => import('./FilesPanel.vue'))
 const TerminalPanel = defineAsyncComponent(() => import('./TerminalPanel.vue'))
-const DesktopBrowserPanel = defineAsyncComponent(() => import('./DesktopBrowserPanel.vue'))
 withDefaults(defineProps<{
   contextReady?: boolean
   workspaceSessionId?: string | null
   workspace?: string | null
   visible: boolean
-  browserVisible: boolean
-  browserAvailable: boolean
-  submit: (submission: BrowserAnnotationSubmission) => boolean | void | Promise<boolean | void>
 }>(), { contextReady: true })
-const activePanel = defineModel<'files' | 'terminal' | 'browser'>('activePanel', { default: 'files' })
+const activePanel = defineModel<'files' | 'terminal'>('activePanel', { default: 'files' })
 const emit = defineEmits<{ attach: [file: File] }>()
 const { t } = useI18n()
 </script>
@@ -52,24 +47,6 @@ const { t } = useI18n()
           <path d="m7 9 3 3-3 3M13 15h4" />
         </svg>
       </button>
-      <button
-        v-if="browserAvailable"
-        class="chat-tool-tab"
-        :class="{ active: activePanel === 'browser' }"
-        type="button"
-        role="tab"
-        :title="t('browser.title')"
-        :aria-label="t('browser.title')"
-        :aria-selected="activePanel === 'browser'"
-        @click="activePanel = 'browser'"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="16" rx="2" />
-          <path d="M3 9h18" />
-          <circle cx="6.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
-          <circle cx="9.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
-        </svg>
-      </button>
     </div>
     <div class="chat-tool-content">
       <FilesPanel
@@ -82,12 +59,6 @@ const { t } = useI18n()
       <TerminalPanel
         v-show="activePanel === 'terminal'"
         :visible="visible && activePanel === 'terminal'"
-      />
-      <DesktopBrowserPanel
-        v-if="browserAvailable && activePanel === 'browser'"
-        :submission-context="workspaceSessionId"
-        :visible="browserVisible"
-        :submit="submit"
       />
     </div>
   </div>
@@ -121,18 +92,17 @@ const { t } = useI18n()
 }
 
 .chat-tool-tab {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;
   border: none;
-  border-radius: $radius-sm;
+  border-radius: var(--radius-md, 8px);
   background: transparent;
   color: $text-secondary;
   cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all $transition-fast;
 
   svg {
     width: 18px;
@@ -150,34 +120,16 @@ const { t } = useI18n()
   }
 
   &.active {
-    color: var(--accent-primary);
+    color: $accent-primary;
     background: rgba(var(--accent-primary-rgb), 0.12);
-
-    &::after {
-      content: "";
-      position: absolute;
-      right: -6px;
-      top: 9px;
-      bottom: 9px;
-      width: 2px;
-      border-radius: 2px 0 0 2px;
-      background: var(--accent-primary);
-    }
   }
 }
 
 .chat-tool-content {
-  order: 1;
   flex: 1;
   min-width: 0;
   min-height: 0;
+  order: 1;
   overflow: hidden;
-  background: var(--theme-content-bg, $bg-main-surface);
 }
-
-.chat-tool-content > * {
-  height: 100%;
-  min-height: 0;
-}
-
 </style>

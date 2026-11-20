@@ -73,10 +73,10 @@ describe('task artifact guard', () => {
   it('keeps declared dependencies, build outputs, runtime data and maintained documentation usable', async () => {
     const { root } = await fixture()
     for (const relative of [
-      'node_modules/tool/reports/report.json', 'packages/desktop/resources/reports/report.json',
+      'node_modules/tool/reports/report.json',
       'packages/server/data/import-report.json', 'hermes_data/reports/report.json',
-      'packages/ekko-agent/.ekko/reports/report.json', 'packages/desktop/release/build-report.json',
-      'packages/client/dist/report.json', 'packages/mcu/board/.pio/report.json',
+      'packages/ekko-agent/.ekko/reports/report.json',
+      'packages/client/dist/report.json',
       'logs/runtime.log', 'docs/harness/task-artifacts.md', 'tests/server/fixtures/example.ts',
       'docs/screenshots/product.png',
       'docs/chat-chain-changes/2026-09-27-hermes-bridge-compatibility-audit.md',

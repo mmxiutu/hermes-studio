@@ -50,7 +50,7 @@ it('requires the browser permission independently of API writes, binds identity,
   await vi.waitFor(() => expect(allowed.browser).toHaveBeenCalledTimes(2))
   controller.abort(new Error('Stopped'))
   await expect(pending).rejects.toThrow('Stopped')
-  expect(() => pluginApiPath('/api/studio/desktop-browser/request', identity, {})).toThrow()
+  expect(() => pluginApiPath('/api/studio/plugins/install', identity, {})).toThrow()
 })
 it('cleans ordinary callback resources when the call finishes', async () => {
   const { runtime } = await fixture(), dispose = vi.fn()

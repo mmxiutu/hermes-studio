@@ -1,8 +1,8 @@
 # Architecture
 
-Ekko Studio is a TypeScript monorepo that ships a local-first AI workspace
-through a web console, a Koa backend, and an Electron desktop app. It integrates
-Ekko Agent, Hermes Agent, and coding agents for chat, coding, and workflows.
+Hermes Web UI is a TypeScript monorepo that ships a self-hosted web console
+and Koa backend. It integrates Ekko Agent, Hermes Agent, and coding agents for
+chat, coding, and workflows.
 
 ## Package Boundaries
 
@@ -11,10 +11,8 @@ Ekko Agent, Hermes Agent, and coding agents for chat, coding, and workflows.
 | Client | `packages/client/src` | Vue UI, routing, Pinia stores, API wrappers, i18n, browser-visible state. |
 | Server | `packages/server/src` | HTTP API, auth, Socket.IO, SQLite stores, file access, Hermes runtime integration. |
 | Ekko Agent | `packages/ekko-agent` | Canonical Ekko runtime, profile facade, providers, tools, memory, skills, conversations, and package API. |
-| Desktop | `packages/desktop` | Electron shell, local Web UI server bootstrap, updater, bundled Python/Hermes runtime. |
-| MCU | `packages/mcu` | ESP32-C3 source projects and release firmware; board-specific ESP32-S3 firmware. |
 | Tests | `tests` | Required focused tests for new features; the legacy suite has been removed. |
-| CI | `.github/workflows` | Independent Build, Test and E2E checks, lockfile, Docker, and desktop release automation. |
+| CI | `.github/workflows` | Independent Build, Test and E2E checks, lockfile, Web UI release, and Docker publishing. |
 
 ## Request Flow
 
@@ -50,7 +48,7 @@ ownership decisions, allowed dependency matrix, and migration rules.
 - Module `controllers/` handle request-level behavior.
 - Module `services/` own reusable IO, domain behavior, processes, and integrations.
 - Studio `repositories/` and `infrastructure/` own application persistence.
-- Studio `middleware/legacy-app-api.ts` is the only released App and MCU firmware URL compatibility map.
+- Studio `middleware/legacy-app-api.ts` is the only released App URL compatibility map.
 - Plugin Agent IDs use `plugin:<plugin-id>/<agent-id>` and retain that identity in chat, group chat, workflow and usage records. Studio owns registration, per-user/Profile run contexts and transport; plugins own their engine and settings UI. Bootstrap adapts existing Coding Agent management and model proxies into the shared Studio registry, preserving native runtime dispatch and released APIs. See `docs/plugins.md` for the runtime contract.
 - Independent plugin projects are registered by `ekko-studio plugins` under the Web UI home in `plugins/development`. Registration does not execute code. Administrator activation starts host-owned source watching, optional builds and snapshot replacement through the ordinary PluginManager; project sources stay outside the Studio checkout. See `docs/plugins.md`.
 - Studio does not bundle or automatically install OMP. It is installed and updated independently through the plugin center or a development link. Existing installations keep their package snapshots and data. The generic `plugins/builtin` catalog is currently empty; demo packages live only in `tests/fixtures/plugins`. Stable `ctx.paths.dataDir` holds plugin-owned engine files independently of package versions, and Studio supplies scoped model proxies through the existing Agent contract.
@@ -78,87 +76,11 @@ Frontend rules:
 - Add visible text to all locale files.
 - Keep component styles scoped unless the style is intentionally global.
 
-## Desktop Release Flow
-
-Desktop packaging is intentionally split:
+## Web UI Release Flow
 
 - Pull requests run the repository harness and web UI build in `.github/workflows/build.yml`.
-- Published GitHub Releases run Web UI artifact packaging and Docker image publishing without
-  marking the release as GitHub latest.
-- Manual dispatches run full desktop artifact packaging in `.github/workflows/desktop-release.yml`.
-- `.github/workflows/desktop-manual-build.yml` builds one desktop target for targeted repairs or re-runs.
-- Windows x64 and ARM64 use native runners and separate updater manifests
-  (`latest.yml` and `latest-arm64.yml`). See `packages/desktop/WINDOWS-ARM64.md`
-  for native speech staging and runtime acceptance.
-- Each release matrix target uploads only the artifact globs for its own platform.
-- A successful full desktop release marks the target GitHub Release as latest after all desktop artifacts
-  and the merged macOS updater manifest have been uploaded.
-
-Do not make a Windows job require macOS `.dmg` files or a Linux job require
-Windows installers. Keep `fail_on_unmatched_files: true` where platform-specific
-artifact lists make the expectation explicit.
-
-### Desktop Hermes Runtime
-
-Hermes runtime assets are built separately by
-`.github/workflows/desktop-runtime.yml`. `packages/desktop/scripts/runtime-config.mjs`
-pins an upstream Hermes version, Git ref, and full commit; version overrides
-must supply the ref and commit together.
-
-For releases that declare placeholder package metadata (`0.0.0`), the runtime
-requires the matching `v<version>` source tag and uses upstream's install-stamp
-writer without changing tracked files. Installation and relocation checks read
-the canonical Hermes identity. Manual dispatches can override `python_version`
-and `python_build_tag` together; Hermes 0.22.2 uses Python 3.14.7 from the
-python-build-standalone `20260901` release.
-
-The portable Node.js included in runtime assets is pinned independently from
-the GitHub Actions runner. Manual runtime dispatches take a target release tag;
-when the release does not exist, the upload step creates it with the workflow's
-`GITHUB_TOKEN`. Do not pre-publish runtime-only releases with a user token,
-because that emits `release.published` and starts the normal Web UI and Docker
-release workflows.
-
-The published runtime keeps this updateable layout:
-
-```text
-python/                 Hermes Agent Git checkout and source root
-  .git/
-  base/                 Windows python-build-standalone base runtime
-  venv/                 bundled Python environment
-    Scripts/python.exe  Windows PEP 405 venv interpreter
-  agent-browser/
-  node/                  browser CLI npm prefix
-  ms-playwright/
-  manifest.json         Hermes PM payload paths on newer runtimes
-  runtime-tools/        PM-pinned Chromium on newer runtimes
-node/                    bundled Node.js
-git/                     bundled MinGit on Windows
-runtime-manifest.json
-```
-
-`prepare:runtime` fetches the exact source commit and installs its locked
-dependencies into `python/venv`. On Windows, the standalone base interpreter is
-embedded at `python/base` and a sibling PEP 405 venv wraps it. Windows requires
-an absolute `pyvenv.cfg` home, so the build, package validation, extraction, and
-runtime migration paths rebase that value before launching Python. This lets
-upstream `hermes update` safely target the environment through `VIRTUAL_ENV`.
-The build also creates the upstream TUI/dashboard and verifies that the retained
-checkout is clean. `package:runtime` includes the source and Git metadata in the
-GitHub/CF archive and records them in schema 2 of the runtime manifest. Do not
-patch tracked Hermes source during this build:
-Studio-specific integration belongs in Studio, and the clean checkout is what
-allows users to run the upstream `hermes update` command directly.
-
-Hermes 0.23 runtime builds use Python 3.14.7 and Node.js 26.13.0 by default.
-Fetch steps reject cached interpreters from another pinned version before reuse.
-When the source exposes the native `tools.browser_launcher`, the build stages Chromium
-through PM's build-owned `prepare_tools` operation and writes a relative payload
-manifest. PM can then find the bundled executable after extraction without a
-profile-specific path or a first-use download. Older runtimes retain the
-agent-browser packaging path. Generated PM files are excluded through Git's
-local `info/exclude`; tracked upstream files remain unchanged. Packaging checks
-the PM-selected browser again after moving the source into its staging directory.
+- Published GitHub Releases run Web UI artifact packaging (`.github/workflows/webui-release.yml`)
+  and Docker image publishing without marking the release as GitHub latest.
 
 Studio owns imported Provider configuration under the authenticated user's
 `providers/users/<id>` directory in the application home. Hermes receives an

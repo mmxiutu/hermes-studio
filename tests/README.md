@@ -14,14 +14,14 @@ or require full coverage/browser sweeps for routine changes.
 - Keep assertions about behavior. Avoid source-string assertions, duplicated
   matrices, real provider calls and unrelated whole-application setup.
 
-Run the tests added for each new feature before opening a PR. `npm test`,
+Run the tests added for each new feature locally. `npm test`,
 `npm run test:coverage` and `npm run test:e2e` explicitly allow an empty suite
 during the reset; this does not exempt new features from adding tests. Once
 matching tests are added, assertion failures still fail the command.
 
 Independent Test (`.github/workflows/test.yml`) and E2E
 (`.github/workflows/playwright.yml`) workflows automatically run `npm test` and
-`npm run test:e2e` on pushes to `main` and pull requests targeting `main` or `base`.
+`npm run test:e2e` on pushes to `main`.
 Both can also be run manually. Build reports the repository harness and production
 build separately. E2E runs four Chromium shards with one worker each and
 `fail-fast: false`, so a failing shard does not cancel the other shards. The
@@ -29,8 +29,7 @@ existing `fullyParallel` configuration distributes individual tests across shard
 Each shard uploads a blob report and available screenshots/traces, including on
 test failure. A final job merges the blobs into one HTML report (`e2e-results`)
 and preserves the required check name `E2E`. This check fails if any shard fails,
-report merging fails, or any of the four reports is missing. PR updates still
-cancel superseded workflow runs.
+report merging fails, or any of the four reports is missing.
 New tests are picked up without editing the workflows, and any assertion failure
 fails the corresponding Test or E2E check. Lockfile checks remain separate.
 Blanket coverage and cross-platform regression matrices are not required.

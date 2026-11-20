@@ -70,12 +70,6 @@ import type {
 } from '@/api/studio/group-chat'
 import { useFilesStore } from '@/stores/hermes/files'
 import { useToolPanelStore } from '@/stores/hermes/tool-panel'
-import { hasDesktopBrowserBridge } from '@/utils/desktop-bridge'
-import { OPEN_DESKTOP_BROWSER_PANEL_EVENT } from '@/utils/desktop-browser'
-import {
-    createBrowserAnnotationAttachment,
-    type BrowserAnnotationSubmission,
-} from '@/utils/browser-annotation-submit'
 import { configuredProviderApiMode, canScopedCodingAgentUseProvider } from '@/utils/codingAgentProviders'
 import {
     inferCodingAgentApiMode,
@@ -101,7 +95,6 @@ import {
 const FilesPanel = defineAsyncComponent(async () => (await import('@/components/hermes/chat/FilesPanel.vue')).default)
 const FilePreview = defineAsyncComponent(async () => (await import('@/components/hermes/files/FilePreview.vue')).default)
 const WorkspaceDiffPreview = defineAsyncComponent(async () => (await import('@/components/hermes/files/WorkspaceDiffPreview.vue')).default)
-const DesktopBrowserPanel = defineAsyncComponent(async () => (await import('@/components/hermes/chat/DesktopBrowserPanel.vue')).default)
 const TerminalPanel = defineAsyncComponent(async () => (await import('@/components/hermes/chat/TerminalPanel.vue')).default)
 
 const props = withDefaults(defineProps<{
@@ -239,8 +232,7 @@ const groupChatSurfaceRef = ref<HTMLElement | null>(null)
 let roomFadeAnimation: Animation | null = null
 const showWorkspacePanel = ref(false)
 const toolPanelTransitionReady = ref(false)
-const activeWorkspacePanel = ref<'files' | 'terminal' | 'browser'>('files')
-const desktopBrowserAvailable = hasDesktopBrowserBridge()
+const activeWorkspacePanel = ref<'files' | 'terminal'>('files')
 const workspacePanelMobile = ref(window.innerWidth <= 768)
 const WORKSPACE_PANEL_MIN_WIDTH = 360
 const WORKSPACE_PANEL_DEFAULT_WIDTH = 560
@@ -701,10 +693,7 @@ watch(
 const visibleAgentPairing = computed(() =>
     currentRoomCanManage.value ? pendingAgentPairings.value[0] || null : null,
 )
-const groupToolPanelTitle = computed(() => desktopBrowserAvailable
-    ? `${t('drawer.files')} / ${t('drawer.terminal')} / ${t('browser.title')}`
-    : `${t('drawer.files')} / ${t('drawer.terminal')}`
-)
+const groupToolPanelTitle = computed(() => `${t('drawer.files')} / ${t('drawer.terminal')}`)
 const canUpdateRoomName = computed(() => {
     const nextName = roomNameDraft.value.trim()
     return currentRoomCanManage.value
@@ -850,8 +839,7 @@ function handleToolPanelLeaveCancelled(): void {
     toolPanelTransitionReady.value = true
 }
 
-function selectWorkspacePanel(panel: 'files' | 'terminal' | 'browser'): void {
-    if (panel === 'browser' && !desktopBrowserAvailable) return
+function selectWorkspacePanel(panel: 'files' | 'terminal'): void {
     if (panel !== 'files') {
         if (toolPanelStore.workspaceDiff?.editable && filesStore.hasUnsavedChanges) {
             message.warning(t('files.unsavedChanges'))
@@ -863,26 +851,6 @@ function selectWorkspacePanel(panel: 'files' | 'terminal' | 'browser'): void {
     }
     activeWorkspacePanel.value = panel
     showWorkspacePanel.value = true
-}
-
-function handleOpenDesktopBrowserPanelRequest(): void {
-    selectWorkspacePanel('browser')
-}
-
-async function submitBrowserAnnotations(payload: BrowserAnnotationSubmission): Promise<boolean> {
-    if (currentRoomNeedsSummaryConfiguration.value) {
-        await handleSummaryConfigurationRequired()
-        return false
-    }
-    const attachment = createBrowserAnnotationAttachment(payload)
-    try {
-        await store.sendMessage('', [attachment])
-        return true
-    } catch (err: any) {
-        URL.revokeObjectURL(attachment.url)
-        message.error(err instanceof Error ? err.message : String(err))
-        return false
-    }
 }
 
 function groupWorkspacePreviewPath(filePath: string): string | null {
@@ -1598,7 +1566,6 @@ onMounted(() => {
     if (!props.standalone) void refreshAgentAvailability()
     window.addEventListener('hermes:preview-workspace-file', handleWorkspaceFilePreviewRequest)
     window.addEventListener('hermes:preview-group-attachment', handleGroupAttachmentPreviewRequest)
-    window.addEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, handleOpenDesktopBrowserPanelRequest)
     window.addEventListener('resize', handleWorkspacePanelResize)
     window.addEventListener('focus', handleWindowFocus)
     handleWorkspacePanelResize()
@@ -1618,7 +1585,6 @@ onUnmounted(() => {
     hideInlineSummaryStatus()
     window.removeEventListener('hermes:preview-workspace-file', handleWorkspaceFilePreviewRequest)
     window.removeEventListener('hermes:preview-group-attachment', handleGroupAttachmentPreviewRequest)
-    window.removeEventListener(OPEN_DESKTOP_BROWSER_PANEL_EVENT, handleOpenDesktopBrowserPanelRequest)
     window.removeEventListener('resize', handleWorkspacePanelResize)
     window.removeEventListener('focus', handleWindowFocus)
     stopWorkspaceResize()
@@ -2676,7 +2642,6 @@ function handleClarifyKeydown(event: KeyboardEvent) {
                         v-if="showWorkspacePanel && (
                             activeWorkspacePanel === 'files'
                             || activeWorkspacePanel === 'terminal'
-                            || (activeWorkspacePanel === 'browser' && desktopBrowserAvailable)
                             || toolPanelStore.workspaceDiff
                             || currentRoom?.workspace
                             || filesStore.previewFile?.workspaceRoomId === store.currentRoomId
@@ -2721,24 +2686,6 @@ function handleClarifyKeydown(event: KeyboardEvent) {
                                             <path d="m7 9 3 3-3 3M13 15h4" />
                                         </svg>
                                     </button>
-                                    <button
-                                        v-if="desktopBrowserAvailable"
-                                        class="group-tool-tab"
-                                        :class="{ active: activeWorkspacePanel === 'browser' }"
-                                        type="button"
-                                        role="tab"
-                                        :title="t('browser.title')"
-                                        :aria-label="t('browser.title')"
-                                        :aria-selected="activeWorkspacePanel === 'browser'"
-                                        @click="selectWorkspacePanel('browser')"
-                                    >
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                                            <rect x="3" y="4" width="18" height="16" rx="2" />
-                                            <path d="M3 9h18" />
-                                            <circle cx="6.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
-                                            <circle cx="9.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
-                                        </svg>
-                                    </button>
                                 </div>
                                 <div class="group-tool-content">
                                     <template v-if="currentRoom?.workspace">
@@ -2766,12 +2713,6 @@ function handleClarifyKeydown(event: KeyboardEvent) {
                                         v-show="activeWorkspacePanel === 'terminal'"
                                         class="group-terminal-panel"
                                         :visible="showWorkspacePanel && activeWorkspacePanel === 'terminal'"
-                                    />
-                                    <DesktopBrowserPanel
-                                        v-if="desktopBrowserAvailable && activeWorkspacePanel === 'browser'"
-                                        class="group-browser-panel"
-                                        :visible="toolPanelTransitionReady"
-                                        :submit="submitBrowserAnnotations"
                                     />
                                 </div>
                             </template>

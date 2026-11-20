@@ -19,7 +19,6 @@ export default defineConfig({
       reportsDirectory: taskArtifactPath(__dirname, 'coverage'),
       exclude: [
         '**/dist/**',
-        'packages/desktop/release/**',
       ],
     },
   },

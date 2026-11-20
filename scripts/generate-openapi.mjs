@@ -44,7 +44,6 @@ const openapi = {
 // Tag mappings based on route directories
 const tagMappings = {
   'modules/studio/routes/person.ts': { name: 'Person', description: 'Account-owned assistant, independent memory, task execution, decisions and durable schedules' },
-  'modules/studio/routes/desktop-browser.ts': { name: 'Desktop Browser', description: 'Authenticated remote Desktop browser relay with explicit Desktop consent' },
   'modules/hermes/routes/profiles.ts': { name: 'Profiles', description: 'Hermes profile management' },
   'modules/hermes/routes/models.ts': { name: 'Models', description: 'Model configuration' },
   'modules/hermes/routes/providers.ts': { name: 'Providers', description: 'Model provider management' },
@@ -99,8 +98,6 @@ const tagMappings = {
   'modules/studio/routes/auth.ts': { name: 'Auth', description: 'Authentication management' },
   'modules/studio/routes/app-connections.ts': { name: 'App Connections', description: 'Mobile App authorization and connection management' },
   'modules/studio/routes/app-relay.ts': { name: 'App Relay', description: 'Mobile App cloud relay route and connection management' },
-  'modules/studio/routes/mcu-devices.ts': { name: 'MCU Devices', description: 'Microcontroller device management' },
-  'modules/studio/routes/mcu-firmware.ts': { name: 'MCU Firmware', description: 'Microcontroller firmware distribution' },
   'modules/studio/routes/theme.ts': { name: 'Theme', description: 'Per-user appearance settings and background image' },
   'modules/studio/routes/navigation.ts': { name: 'Navigation', description: 'Per-user navigation entries, ordering and explicit plugin opt-in' },
   'modules/studio/routes/announcements.ts': { name: 'Announcements', description: 'Published Studio desktop announcements, newest first' },
@@ -1938,22 +1935,6 @@ themeZipImport.responses = {
   '400': { description: 'Invalid or unsupported archive, manifest, settings or entries' },
   '401': { $ref: '#/components/responses/Unauthorized' },
   '413': { description: 'ZIP or background exceeds the allowed size' }, '415': { description: 'Expected ZIP bytes or a supported background image' },
-}
-
-const browserRelayOperation = openapi.paths['/api/studio/desktop-browser/request']?.post
-if (browserRelayOperation) {
-  browserRelayOperation.summary = 'Operate the explicitly authorized remote Desktop browser'
-  browserRelayOperation.description = 'Requires an identified Studio user and matching Profile with an explicitly authorized active Desktop. Ownership transfers only on real user input after 10 minutes of owner inactivity and no in-flight operation. No browser credentials or debug ports are exposed. Run bindings never silently switch desktops; disconnected or replaced targets fail closed.'
-  browserRelayOperation.requestBody = { required: true, content: { 'application/json': { schema: {
-    type: 'object', required: ['method', 'client_id'], additionalProperties: false,
-    properties: {
-      client_id: { type: 'string', minLength: 1, maxLength: 200, description: 'Stable browser MCP process identity bound with authenticated token/context to the original Desktop.' },
-      method: { type: 'string', enum: ['cdp.attach', 'cdp.send', 'cdp.events', 'state', 'tabs.list', 'tabs.create', 'tabs.activate', 'tabs.close', 'lease.release', 'navigate', 'navigation.action', 'snapshot', 'text.read', 'interact', 'interact.batch', 'screenshot', 'console.read', 'console.clear'] },
-      params: { type: 'object', additionalProperties: true },
-    },
-  } } } }
-  browserRelayOperation.responses['403'] = { description: 'Identified Studio account required' }
-  browserRelayOperation.responses['409'] = { description: 'Unavailable, ambiguous, disconnected, revoked or invalid browser operation' }
 }
 
 const pluginBrowserOperation = openapi.paths['/api/studio/plugins/{id}/browser']?.post

@@ -7,7 +7,7 @@ agent can discover without chat history.
 
 - Make repository context legible through short maps and deeper docs.
 - Keep architecture constraints close to the code they protect.
-- Give agents a deterministic validation path before opening or updating a PR.
+- Give agents a deterministic local validation path.
 - Prefer mechanical checks over reminder text when a rule can be verified.
 
 ## Entry Points
@@ -18,7 +18,6 @@ agent can discover without chat history.
 - `docs/harness/validation.md` maps change types to checks.
 - `docs/harness/worktree-runbook.md` explains isolated worktree development.
 - `docs/harness/task-artifacts.md` defines external task/report storage and safe cleanup; `scripts/task-artifacts.mjs` checks known leftovers without deleting anything.
-- `docs/harness/pr-review.md` provides a PR self-review checklist.
 - `docs/harness/person-task-acceptance.md` documents opt-in background-task acceptance, durable completion gates, supported surfaces and validation.
 - `docs/harness/person-task-redirection.md` documents direction corrections, queue/callback invalidation, confirmed-stop barriers and focused verification.
 - `docs/harness/startup-tasks.md` describes one-time startup operations and their persistent execution records.
@@ -28,7 +27,7 @@ agent can discover without chat history.
 - `scripts/ui-theme-harness.mjs` inspects Vue/SCSS/inline styles; the exact
   declarations in `scripts/ui-theme-baseline.json` track existing style debt.
 - `scripts/harness-check.mjs` is the single harness entry point. It enforces
-  repository, UI theme, desktop release/runtime, and backend module-boundary invariants.
+  repository, UI theme, Web UI release, and backend module-boundary invariants.
 - `scripts/server-module-boundaries.mjs` implements the backend boundary portion
   consumed by the unified harness and its focused unit tests.
 - `scripts/jev-integrations.json` registers concrete JEV consumers and their UI fields;

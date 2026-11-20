@@ -4,7 +4,7 @@ import ts from 'typescript'
 import { parse as parseVue } from 'vue/compiler-sfc'
 
 const manifestPath = 'scripts/jev-integrations.json'
-const sourceRoots = ['packages/server/src', 'packages/client/src', 'packages/ekko-agent/src', 'packages/desktop/src', 'bin']
+const sourceRoots = ['packages/server/src', 'packages/client/src', 'packages/ekko-agent/src', 'bin']
 const sharedFields = new Set(['baseUrl', 'model', 'apiKey', 'timeoutMs'])
 // These implement transport/configuration, or explicit manual API/connection tests.
 // Business integrations must be registered instead of extending this allowlist.

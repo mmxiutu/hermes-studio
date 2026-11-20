@@ -8,21 +8,14 @@ on:
       - package.json
       - package-lock.json
       - .github/workflows/npm-lockfile-check.yml
-  pull_request:
-    branches:
-      - main
-      - base
-    paths:
-      - package.json
-      - package-lock.json
-      - .github/workflows/npm-lockfile-check.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: npm-lockfile-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: npm-lockfile-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:

@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { hasApiKey, isStoredSuperAdmin } from '@/api/client'
-import { hasDesktopBrowserBridge } from '@/utils/desktop-bridge'
 import { resolveLoginRedirect } from '@/utils/login-redirect'
 import { captureProviderImport } from '@/utils/provider-import'
 
@@ -289,21 +288,6 @@ const router = createRouter({
     },
   ],
 })
-
-// Desktop exposes a dedicated settings page. Actual browsing stays inside the
-// chat tool panel so this route never creates or positions a WebContentsView.
-if (hasDesktopBrowserBridge()) {
-  router.addRoute({
-    path: '/hermes/browser/downloads',
-    name: 'hermes.browserDownloads',
-    component: () => import('@/views/hermes/BrowserDownloadsView.vue'),
-  })
-  router.addRoute({
-    path: '/hermes/browser',
-    name: 'hermes.browser',
-    component: () => import('@/views/hermes/DesktopBrowserView.vue'),
-  })
-}
 
 async function ensureDesktopAuth(): Promise<void> {
   if (hasApiKey()) return
