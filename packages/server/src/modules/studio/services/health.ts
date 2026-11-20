@@ -40,6 +40,9 @@ export class StudioHealthService {
   constructor(private readonly dependencies: StudioHealthDependencies) {}
 
   async checkLatestVersion(): Promise<void> {
+    // Self-hosted: skip npm registry polling (used to recommend Web UI upgrades).
+    return
+    /*
     if (isUpdateCheckDisabled()) return
     try {
       const packageName = this.packageInfo?.name
@@ -59,12 +62,17 @@ export class StudioHealthService {
     } catch {
       // Version checks must not affect server health.
     }
+    */
   }
 
   startVersionCheck(): void {
+    // Self-hosted: do not schedule periodic npm latest checks.
+    return
+    /*
     if (isUpdateCheckDisabled()) return
     setTimeout(() => this.checkLatestVersion(), 5000)
     setInterval(() => this.checkLatestVersion(), 30 * 60 * 1000)
+    */
   }
 
   async snapshot() {

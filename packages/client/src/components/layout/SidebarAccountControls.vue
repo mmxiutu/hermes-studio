@@ -189,6 +189,7 @@ function handleUpdateClick() {
           t("sidebar.reloadClientVersion", { version: appStore.serverVersion })
         }}
       </NButton>
+      <!-- Self-hosted: hide npm "new version available" / recommended upgrade.
       <NButton
         v-else-if="appStore.updateAvailable"
         type="primary"
@@ -204,6 +205,7 @@ function handleUpdateClick() {
             : t("sidebar.updateVersion", { version: appStore.latestVersion })
         }}
       </NButton>
+      -->
     </div>
 
     <NModal

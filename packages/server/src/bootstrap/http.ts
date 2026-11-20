@@ -19,7 +19,7 @@ import { initLoginLimiter } from '../modules/studio/services/auth/login-limiter'
 import { createShutdownHandler } from './lifecycle'
 import { setupTerminalWebSocket } from '../modules/hermes/sockets/terminal'
 import { setupKanbanEventsWebSocket } from '../modules/hermes/sockets/kanban-events'
-import { startVersionCheck } from './health'
+// import { startVersionCheck } from './health'
 import { registerRoutes } from './routes'
 import { dshPluginUi } from '../modules/coding-agents/services'
 import './chat-agent-runtime-adapter'
@@ -686,7 +686,7 @@ export async function bootstrap() {
     agentBridgeManager,
     additionalShutdownSteps,
   )
-  startVersionCheck()
+  // startVersionCheck() // self-hosted: no npm "new version" polling
   console.log('[bootstrap] startup complete')
 }
 

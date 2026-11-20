@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { isStoredSuperAdmin } from '@/api/client'
 import { useSessionSearch } from '@/composables/useSessionSearch'
-import DesktopUpdateDownloadTab from './DesktopUpdateDownloadTab.vue'
+// import DesktopUpdateDownloadTab from './DesktopUpdateDownloadTab.vue'
 import { useNavigationRail } from '@/composables/useNavigationRail'
 
 type ActiveSection = 'person' | 'chat' | 'history' | 'connections' | 'agents' | 'models' | 'usage' | 'apiRelay' | 'group' | 'global' | 'workflow'
@@ -76,7 +76,9 @@ function openApiRelay() {
 
 <template>
   <div class="page-sidebar-nav" :class="{ 'page-sidebar-nav--compact': hasNavigationRail }">
+    <!-- Self-hosted: desktop auto-update download tab disabled.
     <DesktopUpdateDownloadTab />
+    -->
     <div class="page-sidebar-tabs" role="tablist" aria-label="Chat actions">
       <div class="page-sidebar-search-row">
         <button

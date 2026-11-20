@@ -88,15 +88,16 @@ function confirm() {
 
 onMounted(() => {
   mounted = true
-  void checkAnnouncements()
-  window.addEventListener('focus', checkAnnouncements)
-  document.addEventListener('visibilitychange', checkAnnouncements)
+  // Self-hosted: skip remote announcement / recommended-update prompts.
+  // void checkAnnouncements()
+  // window.addEventListener('focus', checkAnnouncements)
+  // document.addEventListener('visibilitychange', checkAnnouncements)
 })
 
 onBeforeUnmount(() => {
   mounted = false
-  window.removeEventListener('focus', checkAnnouncements)
-  document.removeEventListener('visibilitychange', checkAnnouncements)
+  // window.removeEventListener('focus', checkAnnouncements)
+  // document.removeEventListener('visibilitychange', checkAnnouncements)
 })
 </script>
 

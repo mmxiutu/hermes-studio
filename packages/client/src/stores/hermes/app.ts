@@ -86,8 +86,11 @@ export const useAppStore = defineStore('app', () => {
       connected.value = res.status === 'ok'
       if (res.webui_version) serverVersion.value = res.webui_version
       clientOutdated.value = !!res.webui_version && res.webui_version !== WEB_UI_VERSION
-      if (res.webui_latest) latestVersion.value = res.webui_latest
-      updateAvailable.value = !!res.webui_update_available
+      // Self-hosted: do not surface npm "new version" / recommended upgrade.
+      // if (res.webui_latest) latestVersion.value = res.webui_latest
+      // updateAvailable.value = !!res.webui_update_available
+      latestVersion.value = ''
+      updateAvailable.value = false
       if (res.node_version) nodeVersion.value = res.node_version
       isDocker.value = !!res.is_docker
     } catch {
