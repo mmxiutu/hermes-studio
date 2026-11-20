@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NButton, NModal, useMessage, NTag, type GlobalThemeOverrides } from 'naive-ui'
+import { NButton, NModal, type GlobalThemeOverrides } from 'naive-ui'
 import { useAppStore } from '@/stores/hermes/app'
 import ModelSelector from '@/components/layout/ModelSelector.vue'
 import ProfileSelector from '@/components/layout/ProfileSelector.vue'
@@ -13,11 +13,8 @@ import { clearThemeBackgroundCache } from '@/api/studio/theme'
 
 const emit = defineEmits<{ 'open-modal': []; 'open-navigation-settings': [] }>()
 const { t } = useI18n()
-const message = useMessage()
 const appStore = useAppStore()
 const showChangelog = ref(false)
-const showDockerUpdateTip = ref(false)
-const isDockerRuntime = computed(() => appStore.isDocker)
 const languageThemeOverrides: GlobalThemeOverrides['Select'] = {
   peers: {
     InternalSelection: {
@@ -40,15 +37,6 @@ function handleModalShow(show: boolean) {
   if (show) emit('open-modal')
 }
 
-async function handleUpdate() {
-  const ok = await appStore.doUpdate();
-  if (ok) {
-    message.success(t("sidebar.updateSuccess"), { duration: 5000 });
-  } else {
-    message.error(t("sidebar.updateFailed"));
-  }
-}
-
 function handleReloadClient() {
   appStore.reloadClient();
 }
@@ -65,18 +53,6 @@ function openChangelog() {
   showChangelog.value = true;
 }
 
-function handleDockerUpdateTip() {
-  emit('open-modal');
-  showDockerUpdateTip.value = true;
-}
-
-function handleUpdateClick() {
-  if (isDockerRuntime.value) {
-    handleDockerUpdateTip();
-    return;
-  }
-  void handleUpdate();
-}
 </script>
 
 <template>
@@ -189,23 +165,7 @@ function handleUpdateClick() {
           t("sidebar.reloadClientVersion", { version: appStore.serverVersion })
         }}
       </NButton>
-      <!-- Self-hosted: hide npm "new version available" / recommended upgrade.
-      <NButton
-        v-else-if="appStore.updateAvailable"
-        type="primary"
-        size="tiny"
-        block
-        class="update-btn"
-        :loading="!isDockerRuntime && appStore.updating"
-        @click="handleUpdateClick"
-      >
-        {{
-          !isDockerRuntime && appStore.updating
-            ? t("sidebar.updating")
-            : t("sidebar.updateVersion", { version: appStore.latestVersion })
-        }}
-      </NButton>
-      -->
+      <!-- Self-hosted: no npm "new version" / recommended-upgrade button. -->
     </div>
 
     <NModal
@@ -230,27 +190,6 @@ function handleUpdateClick() {
             </li>
           </ul>
         </div>
-      </div>
-    </NModal>
-    <NModal
-      v-model:show="showDockerUpdateTip"
-      preset="dialog"
-      :title="t('sidebar.dockerUpdateTitle')"
-      style="width: min(480px, calc(100vw - 32px))"
-    >
-      <div class="docker-update-modal">
-        <p>{{ t("sidebar.dockerUpdateGuide") }}</p>
-        <div class="docker-update-commands">
-          <code class="docker-command">docker compose pull</code>
-          <code class="docker-command"
-            >docker compose up -d --force-recreate</code
-          >
-        </div>
-        <p class="docker-update-note">
-          <NTag size="small" type="info" :bordered="false">{{
-            t("sidebar.dockerUpdateNote")
-          }}</NTag>
-        </p>
       </div>
     </NModal>
   </div>
@@ -504,36 +443,4 @@ function handleUpdateClick() {
   }
 }
 
-.docker-update-modal {
-  p {
-    margin: 12px 0;
-    font-size: calc(var(--font-size-base, 14px) * 14 / 14);
-    line-height: var(--line-height, 1.6);
-    color: $text-secondary;
-  }
-
-  .docker-update-commands {
-    display: flex;
-    flex-direction: column;
-    gap: calc(8px * var(--spacing-scale, 1));
-    margin: 16px 0;
-  }
-
-  .docker-command {
-    display: block;
-    padding: calc(10px * var(--spacing-scale, 1)) calc(14px * var(--spacing-scale, 1));
-    background: $code-bg;
-    border-radius: $radius-sm;
-    font-family: var(--font-code, $font-code);
-    font-size: calc(var(--font-size-base, 14px) * 13 / 14);
-    color: $text-primary;
-    user-select: all;
-    cursor: text;
-    border: var(--border-width, 1px) solid $border-color;
-  }
-
-  .docker-update-note {
-    margin-top: 16px;
-  }
-}
 </style>
